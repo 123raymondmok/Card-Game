@@ -1,0 +1,377 @@
+
+
+//Phase 1: CardIdentity + Card Class
+
+public class CardIdentity {
+    // Public Class Type of CardIdentity
+    public enum Suit { CLUBS, DIAMONDS, HEARTS, SPADES }
+
+    // Private Member Data for CardIdentity 
+    private char value;
+    private Suit suit;
+
+    // Constructor that will put in the default values 'A' and 'spades'.  
+    public CardIdentity() {
+        value = 'A';
+        suit = Suit.SPADES;
+    }
+
+    //  the mutator accepting legal values! 
+    public boolean set(char value, Suit suit) {
+        if (isValid(value, suit)) {
+            this.value = value;
+            this.suit = suit;
+            return true;
+        }
+        return false;
+    }
+
+    // Accessors for suit and value
+    public Suit getSuit() {
+        return suit;
+    }
+
+    public char getValue() {
+        return value;
+    }
+
+    // Private static helper that returns true or false
+    private static boolean isValid(char value, Suit suit) {
+        char[] validValues = {'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K'};
+        for (char validValue : validValues) {
+            if (value == validValue) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+
+
+public class Card extends CardIdentity {
+    // Private member
+    private boolean cardError;
+
+    // Constructors
+    public Card() {
+        super(); // Calling onto constructor of superclass; setting its default values
+        this.cardError = false;
+    }
+
+    public Card(char value, Suit suit) { // call super() and then the proper mutator, set()
+        super(); 
+        if (!set(value, suit)) {
+            // If mutator returns false, set defaults and mark cardError as true
+            super.set('A', Suit.SPADES);
+            this.cardError = true;
+        } else {
+            this.cardError = false;
+        }
+    }
+
+    // Override mutator method for setting values
+    @Override
+    public boolean set(char value, Suit suit) {
+        // Call the set method of the superclass
+        boolean success = super.set(value, suit);
+
+        // Updating cardError based on the setting values 
+        cardError = !success;
+
+        return success;
+    }
+
+    // Accessor method for cardError
+    public boolean isCardError() {
+        return cardError;
+    }
+
+    // Stringizer method
+    @Override
+    public String toString() {
+        if (cardError) {
+            return "[ invalid ]";
+        } else {
+            return super.getValue() + " " + super.getSuit();
+        }
+    }
+
+    // Equals method
+    public boolean equals(Card card) {
+        return super.getValue() == card.getValue() && super.getSuit() == card.getSuit() && cardError == card.isCardError();
+    }
+}
+
+
+//Phase 1 Main:
+
+public class Phase1Main {
+    public static void main(String[] args) {
+        // Phase 1: Testing Card and CardIdentity classes
+        System.out.println("Phase 1: Testing Card and CardIdentity classes");
+
+        // Test Card class
+        Card card1 = new Card('A', CardIdentity.Suit.SPADES);
+        Card card2 = new Card('J', CardIdentity.Suit.CLUBS);
+        Card card3 = new Card('Q', CardIdentity.Suit.SPADES);
+
+        System.out.println(card1);
+        System.out.println("** illegal **");
+        System.out.println(card2);
+        System.out.println("** illegal **");
+        System.out.println(card3);
+        System.out.println("-------------------------------------------------------");
+
+        // Making a good card bad
+        card1.set('X', CardIdentity.Suit.HEARTS);
+
+        // Turning a card "good"
+        card2.set('T', CardIdentity.Suit.DIAMONDS);
+
+        // Print
+        System.out.println(card1);
+        System.out.println("** illegal **");
+        System.out.println(card2);
+        System.out.println("** illegal **");
+        System.out.println(card3);
+        System.out.println("-------------------------------------------------------");
+    }
+}
+
+
+//Output:
+
+Phase 1: Testing Card and CardIdentity classes
+A♠
+** illegal **
+J♣
+** illegal **
+Q♠
+-------------------------------------------------------
+A♥
+** illegal **
+T♦
+** illegal **
+Q♠
+-------------------------------------------------------
+
+
+
+
+//Phase 2
+
+public class Hand {
+    // Static Class Constants
+    public static final int MAX_CARDS = 30; // Set to a reasonable value
+
+    // Private Member Data
+    private Card[] myCards;
+    private int numCards;
+
+    // Public Methods
+
+    // Default constructor
+    public Hand() {
+        myCards = new Card[MAX_CARDS];
+        numCards = 0;
+    }
+
+    // Remove all cards from your hand
+    public void resetHand() {
+        numCards = 0;
+    }
+
+    // Adding a card to your hand
+    public boolean takeCard(Card card) {
+        if (numCards < MAX_CARDS && card != null && !card.getErrorFlag()) {
+            myCards[numCards++] = new Card(card); // Object copy to avoid reference issues
+            return true;
+        }
+        return false;
+    }
+
+    // Return and removing the card in the top position that's occupied at the array
+    public Card playCard() {
+        if (numCards > 0) {
+            Card playedCard = new Card(myCards[--numCards]); // Object copy to avoid reference issues
+            myCards[numCards] = null; // Set the top position to null
+            return playedCard;
+        }
+        return new Card(); // Return if your hand is empty.
+    }
+
+    // Stringizer for the entire hand
+    public String toString() {
+        StringBuilder handString = new StringBuilder("Hand =  ( ");
+        for (int i = 0; i < numCards; i++) {
+            handString.append(myCards[i]);
+            if (i < numCards - 1) {
+                handString.append(", ");
+            }
+        }
+        handString.append(" )");
+        return handString.toString();
+    }
+
+    // Accessor for numCards
+    public int getNumCards() {
+        return numCards;
+    }
+
+    // Accessor for an individual card at index k
+    public Card inspectCard(int k) {
+        if (k >= 0 && k < numCards) {
+            return new Card(myCards[k]); 
+        } else {
+            return new Card(); // Returning default card if k is out of bounds
+        }
+    }
+}
+
+
+//Phase 2 Main:
+
+public class Phase2Main {
+    public static void main(String[] args) {
+        // Phase 2: Testing Hand class
+        System.out.println("Phase 2: Testing Hand class");
+
+        // Testing the Hand class
+        Hand hand = new Hand();
+
+        // Creating testing cards ^_^
+        Card[] testCards = {
+            new Card('3', CardIdentity.Suit.CLUBS),
+            new Card('T', CardIdentity.Suit.CLUBS),
+            new Card('9', CardIdentity.Suit.HEARTS)
+            // Add more cards as needed
+        };
+
+        // Populating hand
+        for (Card testCard : testCards) {
+            hand.takeCard(testCard);
+        }
+
+        // Displaying hand
+        System.out.println("Hand full");
+        System.out.println("After deal");
+        System.out.println(hand);
+
+        // Testing inspectCard
+        System.out.println("Testing inspectCard()");
+        System.out.println(hand.inspectCard(2)); // Legal index
+        System.out.println("** illegal **");
+        System.out.println(hand.inspectCard(5)); // Illegal index
+        System.out.println("-------------------------------------------------------");
+
+        // Play all of the cards until your hand is empty
+        System.out.println("Playing cards");
+        while (hand.getNumCards() > 0) {
+            System.out.println("Playing " + hand.playCard());
+        }
+
+        // Displaying the empty hand.
+        System.out.println("After playing all cards");
+        System.out.println(hand);
+        System.out.println("-----------------------------------------------------------------------");
+    }
+}
+
+
+//Phase 2 Output:
+Phase 2: Testing Hand class
+Hand full
+After deal
+Hand =  (3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣, T♣, 9♥, 3♣)
+Testing inspectCard()
+9♥
+** illegal **
+-------------------------------------------------------
+Playing cards
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+Playing T♣
+Playing 9♥
+Playing 3♣
+
+After playing all cards
+Hand =  ()
+-----------------------------------------------------------------------
